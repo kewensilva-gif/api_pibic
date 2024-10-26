@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: db_pesquisa
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  api:
+    build:
+      context: ./api
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: db_pesquisa
+      DB_USER: root
+      DB_PASSWORD: root_password
+    depends_on:
+      - db
+    volumes:
+      - ./api/static/images:/app/static/images
+    expose:
+      - "5000"
+
+  nginx:
+    image: nginx:latest
+    depends_on:
+      - api
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+    networks:
+      - default
+
+volumes:
+  db_data:
