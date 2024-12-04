@@ -9,6 +9,10 @@ app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 conexao = criar_conexao()
 
 # rota index, obtem todas as imagens
+@app.route('/teste', methods=['GET'])
+def teste():
+    return jsonify({"message": "Imagem criada com sucesso!"})
+
 @app.route('/imagens', methods=['GET'])
 def get_imagens():
     imagens = obter_imagens(conexao)
