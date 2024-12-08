@@ -1,0 +1,65 @@
+[Wed Dec 04 02:10:44.064134 2024] [mpm_prefork:notice] [pid 1:tid 1] AH00163: Apache/2.4.62 (Unix) configured -- resuming normal operations
+[Wed Dec 04 02:10:44.064713 2024] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+[Wed Dec 04 02:11:05.337117 2024] [proxy:error] [pid 8:tid 8] (111)Connection refused: AH00957: http: attempt to connect to 192.168.48.2:5000 (api:5000) failed
+[Wed Dec 04 02:11:05.338031 2024] [proxy_http:error] [pid 8:tid 8] [client 192.168.48.1:57690] AH01114: HTTP: failed to make connection to backend: api
+[Wed Dec 04 02:11:33.855395 2024] [proxy:error] [pid 12:tid 12] (111)Connection refused: AH00957: http: attempt to connect to 192.168.48.2:5000 (api:5000) failed
+[Wed Dec 04 02:11:33.858922 2024] [proxy_http:error] [pid 12:tid 12] [client 192.168.48.1:41308] AH01114: HTTP: failed to make connection to backend: api
+[Wed Dec 04 02:28:11.341874 2024] [mpm_prefork:notice] [pid 1:tid 1] AH00170: caught SIGWINCH, shutting down gracefully
+[Wed Dec 04 02:28:24.449195 2024] [mpm_prefork:notice] [pid 1:tid 1] AH00163: Apache/2.4.62 (Unix) configured -- resuming normal operations
+[Wed Dec 04 02:28:24.449277 2024] [proxy:debug] [pid 8:tid 8] proxy_util.c(2254): AH00925: initializing worker http://api:5000/ shared
+[Wed Dec 04 02:28:24.449209 2024] [proxy:debug] [pid 10:tid 10] proxy_util.c(2254): AH00925: initializing worker http://api:5000/ shared
+[Wed Dec 04 02:28:24.449610 2024] [proxy:debug] [pid 12:tid 12] proxy_util.c(2254): AH00925: initializing worker http://api:5000/ shared
+[Wed Dec 04 02:28:24.449790 2024] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+[Wed Dec 04 02:28:24.449747 2024] [proxy:debug] [pid 11:tid 11] proxy_util.c(2254): AH00925: initializing worker http://api:5000/ shared
+[Wed Dec 04 02:28:24.450063 2024] [proxy:debug] [pid 9:tid 9] proxy_util.c(2254): AH00925: initializing worker http://api:5000/ shared
+[Wed Dec 04 02:28:24.450421 2024] [proxy:debug] [pid 8:tid 8] proxy_util.c(2325): AH00927: initializing worker http://api:5000/ local
+[Wed Dec 04 02:28:24.451998 2024] [proxy:debug] [pid 8:tid 8] proxy_util.c(2373): AH00931: initialized single connection worker in child 8 for (api:5000)
+[Wed Dec 04 02:28:24.452280 2024] [proxy:debug] [pid 10:tid 10] proxy_util.c(2325): AH00927: initializing worker http://api:5000/ local
+[Wed Dec 04 02:28:24.452583 2024] [proxy:debug] [pid 10:tid 10] proxy_util.c(2373): AH00931: initialized single connection worker in child 10 for (api:5000)
+[Wed Dec 04 02:28:24.452837 2024] [proxy:debug] [pid 12:tid 12] proxy_util.c(2325): AH00927: initializing worker http://api:5000/ local
+[Wed Dec 04 02:28:24.453032 2024] [proxy:debug] [pid 12:tid 12] proxy_util.c(2373): AH00931: initialized single connection worker in child 12 for (api:5000)
+[Wed Dec 04 02:28:24.453195 2024] [proxy:debug] [pid 11:tid 11] proxy_util.c(2325): AH00927: initializing worker http://api:5000/ local
+[Wed Dec 04 02:28:24.453372 2024] [proxy:debug] [pid 11:tid 11] proxy_util.c(2373): AH00931: initialized single connection worker in child 11 for (api:5000)
+[Wed Dec 04 02:28:24.453557 2024] [proxy:debug] [pid 9:tid 9] proxy_util.c(2325): AH00927: initializing worker http://api:5000/ local
+[Wed Dec 04 02:28:24.453727 2024] [proxy:debug] [pid 9:tid 9] proxy_util.c(2373): AH00931: initialized single connection worker in child 9 for (api:5000)
+[Wed Dec 04 02:29:13.918079 2024] [proxy:trace2] [pid 10:tid 10] mod_proxy.c(848): [client 192.168.96.1:49922] AH03461: attempting to match URI path '/teste' against prefix '/' for proxying
+[Wed Dec 04 02:29:13.918431 2024] [proxy:trace1] [pid 10:tid 10] mod_proxy.c(969): [client 192.168.96.1:49922] AH03464: URI path '/teste' matches proxy handler 'proxy:http://api:5000/teste'
+[Wed Dec 04 02:29:13.918598 2024] [authz_core:debug] [pid 10:tid 10] mod_authz_core.c(843): [client 192.168.96.1:49922] AH01628: authorization result: granted (no directives)
+[Wed Dec 04 02:29:13.918758 2024] [proxy:trace2] [pid 10:tid 10] proxy_util.c(2604): [client 192.168.96.1:49922] http: found worker http://api:5000/ for http://api:5000/teste
+[Wed Dec 04 02:29:13.919169 2024] [proxy:debug] [pid 10:tid 10] mod_proxy.c(1465): [client 192.168.96.1:49922] AH01143: Running scheme http handler (attempt 0)
+[Wed Dec 04 02:29:13.919416 2024] [proxy:debug] [pid 10:tid 10] proxy_util.c(2797): AH00942: http: has acquired connection for (api:5000)
+[Wed Dec 04 02:29:13.919597 2024] [proxy:debug] [pid 10:tid 10] proxy_util.c(3242): [client 192.168.96.1:49922] AH00944: connecting http://api:5000/teste to api:5000
+[Wed Dec 04 02:29:13.921962 2024] [proxy:debug] [pid 10:tid 10] proxy_util.c(2905): [client 192.168.96.1:49922] AH10479: http: api resolved to 192.168.96.2:5000
+[Wed Dec 04 02:29:13.922479 2024] [proxy:debug] [pid 10:tid 10] proxy_util.c(3450): [client 192.168.96.1:49922] AH00947: connecting /teste to 192.168.96.2:5000 (api:5000)
+[Wed Dec 04 02:29:13.924830 2024] [proxy:trace2] [pid 10:tid 10] proxy_util.c(3899): http: fam 2 socket created for 192.168.96.2:5000 (api:5000)
+[Wed Dec 04 02:29:13.925570 2024] [proxy:error] [pid 10:tid 10] (111)Connection refused: AH00957: http: attempt to connect to 192.168.96.2:5000 (api:5000) failed
+[Wed Dec 04 02:29:13.927403 2024] [proxy:debug] [pid 10:tid 10] proxy_util.c(2910): AH10480: http: api resolved to 192.168.96.2:5000
+[Wed Dec 04 02:29:13.927802 2024] [proxy_http:error] [pid 10:tid 10] [client 192.168.96.1:49922] AH01114: HTTP: failed to make connection to backend: api
+[Wed Dec 04 02:29:13.928145 2024] [proxy:debug] [pid 10:tid 10] proxy_util.c(2813): AH00943: http: has released connection for (api:5000)
+[Wed Dec 04 02:33:29.619541 2024] [mpm_prefork:notice] [pid 1:tid 1] AH00170: caught SIGWINCH, shutting down gracefully
+[Wed Dec 04 02:33:41.600459 2024] [mpm_prefork:notice] [pid 1:tid 1] AH00163: Apache/2.4.62 (Unix) configured -- resuming normal operations
+[Wed Dec 04 02:33:41.600824 2024] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+[Wed Dec 04 02:38:28.999470 2024] [mpm_prefork:notice] [pid 1:tid 1] AH00170: caught SIGWINCH, shutting down gracefully
+[Wed Dec 04 02:40:50.378543 2024] [mpm_event:notice] [pid 1:tid 1] AH00489: Apache/2.4.62 (Unix) configured -- resuming normal operations
+[Wed Dec 04 02:40:50.379067 2024] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+[Wed Dec 04 02:43:32.193307 2024] [mpm_event:notice] [pid 1:tid 1] AH00492: caught SIGWINCH, shutting down gracefully
+[Wed Dec 04 02:43:40.648141 2024] [mpm_event:notice] [pid 1:tid 1] AH00489: Apache/2.4.62 (Unix) configured -- resuming normal operations
+[Wed Dec 04 02:43:40.648674 2024] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+[Wed Dec 04 02:55:14.569609 2024] [mpm_event:notice] [pid 1:tid 1] AH00492: caught SIGWINCH, shutting down gracefully
+[Wed Dec 04 02:55:16.668996 2024] [mpm_event:notice] [pid 1:tid 1] AH00489: Apache/2.4.62 (Unix) configured -- resuming normal operations
+[Wed Dec 04 02:55:16.672473 2024] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+[Wed Dec 04 03:01:17.971986 2024] [mpm_event:notice] [pid 1:tid 1] AH00492: caught SIGWINCH, shutting down gracefully
+[Wed Dec 04 13:08:05.913786 2024] [mpm_event:notice] [pid 1:tid 1] AH00489: Apache/2.4.62 (Unix) configured -- resuming normal operations
+[Wed Dec 04 13:08:05.915394 2024] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+[Wed Dec 04 13:11:28.253266 2024] [mpm_event:notice] [pid 1:tid 1] AH00494: SIGHUP received.  Attempting to restart
+[Wed Dec 04 13:11:28.289508 2024] [mpm_event:notice] [pid 1:tid 1] AH00489: Apache/2.4.62 (Unix) configured -- resuming normal operations
+[Wed Dec 04 13:11:28.290106 2024] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+[Wed Dec 04 13:20:19.725821 2024] [mpm_event:notice] [pid 1:tid 1] AH00492: caught SIGWINCH, shutting down gracefully
+[Wed Dec 04 13:21:21.292991 2024] [mpm_event:notice] [pid 1:tid 1] AH00489: Apache/2.4.62 (Unix) configured -- resuming normal operations
+[Wed Dec 04 13:21:21.293842 2024] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+[Wed Dec 04 13:21:54.107043 2024] [mpm_event:notice] [pid 1:tid 1] AH00492: caught SIGWINCH, shutting down gracefully
+[Wed Dec 04 13:23:02.072596 2024] [mpm_event:notice] [pid 1:tid 1] AH00489: Apache/2.4.62 (Unix) configured -- resuming normal operations
+[Wed Dec 04 13:23:02.074356 2024] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+[Wed Dec 04 13:25:16.710389 2024] [mpm_event:notice] [pid 1:tid 1] AH00492: caught SIGWINCH, shutting down gracefully
+[Wed Dec 04 13:25:44.301710 2024] [mpm_event:notice] [pid 1:tid 1] AH00489: Apache/2.4.62 (Unix) configured -- resuming normal operations
+[Wed Dec 04 13:25:44.302424 2024] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'

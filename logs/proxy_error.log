@@ -1,0 +1,12 @@
+[Wed Dec 04 02:41:01.182363 2024] [proxy:error] [pid 8:tid 14] (111)Connection refused: AH00957: http: attempt to connect to 192.168.144.3:5000 (api:5000) failed
+[Wed Dec 04 02:41:01.183170 2024] [proxy_http:error] [pid 8:tid 14] [client 192.168.144.1:36906] AH01114: HTTP: failed to make connection to backend: api
+[Wed Dec 04 02:43:54.252031 2024] [proxy:error] [pid 9:tid 16] (111)Connection refused: AH00957: http: attempt to connect to 192.168.144.3:5000 (api:5000) failed
+[Wed Dec 04 02:43:54.252748 2024] [proxy_http:error] [pid 9:tid 16] [client 192.168.144.1:35608] AH01114: HTTP: failed to make connection to backend: api
+[Wed Dec 04 02:53:37.622654 2024] [proxy:error] [pid 8:tid 12] (111)Connection refused: AH00957: http: attempt to connect to 192.168.144.3:5000 (api:5000) failed
+[Wed Dec 04 02:53:37.624211 2024] [proxy_http:error] [pid 8:tid 12] [client 192.168.144.1:60180] AH01114: HTTP: failed to make connection to backend: api
+[Wed Dec 04 02:55:22.281058 2024] [proxy:error] [pid 11:tid 28] (111)Connection refused: AH00957: http: attempt to connect to 192.168.144.3:5000 (api:5000) failed
+[Wed Dec 04 02:55:22.281834 2024] [proxy_http:error] [pid 11:tid 28] [client 192.168.144.1:50348] AH01114: HTTP: failed to make connection to backend: api
+[Wed Dec 04 13:12:18.771715 2024] [proxy:error] [pid 108:tid 112] (111)Connection refused: AH00957: http: attempt to connect to 192.168.144.3:5000 (api:5000) failed
+[Wed Dec 04 13:12:18.774568 2024] [proxy_http:error] [pid 108:tid 112] [client 192.168.144.1:39258] AH01114: HTTP: failed to make connection to backend: api
+[Wed Dec 04 13:23:58.277841 2024] [proxy:error] [pid 9:tid 19] (111)Connection refused: AH00957: http: attempt to connect to 172.22.0.3:5000 (api:5000) failed
+[Wed Dec 04 13:23:58.607609 2024] [proxy_http:error] [pid 9:tid 19] [client 172.22.0.1:34566] AH01114: HTTP: failed to make connection to backend: api
