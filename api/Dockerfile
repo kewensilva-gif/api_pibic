@@ -8,10 +8,12 @@ WORKDIR /app
 COPY . /app
 
 # Instalar dependências
-RUN pip install flask mysql-connector-python werkzeug
+RUN pip install flask mysql-connector-python werkzeug --upgrade paho-mqtt
+
 
 # Criar o diretório para uploads de imagens
 RUN mkdir -p static/images
+
 
 # Expor a porta usada pela API Flask
 EXPOSE 5000

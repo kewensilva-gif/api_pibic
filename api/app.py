@@ -3,66 +3,87 @@ from banco import *
 from datetime import datetime, timezone
 from werkzeug.utils import secure_filename
 import os
+import paho.mqtt.client as mqtt
+import time
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 conexao = criar_conexao()
 
+# Variáveis globais para status
+latest_message = {"topic": None, "message": None}
+mqtt_connected = False
 
-@app.route("/teste", methods=['GET'])
-def get_teste():
-    return jsonify({"message:": "Conexão feita com sucesso"})
-# rota index, obtem todas as imagens
-@app.route('/imagens', methods=['GET'])
-def get_imagens():
-    imagens = obter_imagens(conexao)
-    return jsonify(imagens)
+def on_message(client, userdata, msg):
+    global latest_message
+    latest_message["topic"] = msg.topic
+    latest_message["message"] = msg.payload.decode()
+    print(f"Mensagem recebida: {msg.payload.decode()} no tópico {msg.topic}")
 
-
-# rota store, resposável por inserir as imagens nos arquivos da api e inserir o caminho no banco
-@app.route('/imagens', methods=['POST'])
-def upload_imagem():
-    if request.data:
-        extensao = '.jpg'
-        filename = f"{int(datetime.now(timezone.utc).timestamp())}{extensao}"
-        caminho_imagem = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        
-        with open(caminho_imagem, 'wb') as f:
-            f.write(request.data)
-            
-        if os.path.exists(caminho_imagem) and os.path.getsize(caminho_imagem) > 0:
-            salvar_imagem_no_banco(caminho_imagem, conexao)
-            return jsonify({"message": "Imagem criada com sucesso!"})
-        else:
-            return jsonify({"error": "Não foi possível criar a imagem!"})
-
+def on_connect(client, userdata, flags, rc):
+    global mqtt_connected
+    connection_codes = {
+        0: "Conexão bem-sucedida",
+        1: "Versão do protocolo incorreta",
+        2: "Identificador do cliente inválido",
+        3: "Servidor indisponível",
+        4: "Credenciais inválidas",
+        5: "Não autorizado"
+    }
     
-    return jsonify({"error": "Sem dados de imagem"}), 400
-""" @app.route('/imagens', methods=['POST'])
-def upload_imagem():
-    imagem = request.files.get('image')
-    if imagem and imagem.filename.endswith(('jpeg', 'png', 'jpg')):
-        extensao = os.path.splitext(imagem.filename)[1]
-        filename = secure_filename(f"{int(datetime.now(timezone.utc).timestamp())}{extensao}")
-        caminho_imagem = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        # caso a pasta não exista ele força a criação
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        imagem.save(caminho_imagem)
+    if rc == 0:
+        mqtt_connected = True
+        print(f"✅ {connection_codes[rc]}")
+        # Inscreva-se nos tópicos após confirmar a conexão
+        client.subscribe("testtopic/1")
+    else:
+        mqtt_connected = False
+        print(f"❌ Falha na conexão: {connection_codes.get(rc, 'Erro desconhecido')}")
 
-        salvar_imagem_no_banco(caminho_imagem, conexao)
-        return jsonify({"message": "Imagem criada com sucesso!", "image_path": caminho_imagem})
+def on_disconnect(client, userdata, rc):
+    global mqtt_connected
+    mqtt_connected = False
+    print("❌ Desconectado do broker MQTT")
+
+# Configuração do cliente MQTT
+client = mqtt.Client()
+client.username_pw_set("mqtt_pibic", "Mqtt_pibic2024")
+client.tls_set()
+
+# Vincula as funções de callback
+client.on_connect = on_connect
+client.on_message = on_message
+client.on_disconnect = on_disconnect
+
+# Tenta conectar ao broker
+try:
+    client.connect("d7257de2da354fae9738d35f3212c93b.s1.eu.hivemq.cloud", 8883, 60)
+    client.loop_start()
     
-    return jsonify({"error": "Imagem inválida ou formato não suportado!"}), 400
- """
+    # Aguarda até 5 segundos pela conexão
+    timeout = time.time() + 5
+    while not mqtt_connected and time.time() < timeout:
+        time.sleep(0.1)
+    
+    if not mqtt_connected:
+        print("❌ Timeout na conexão MQTT")
+except Exception as e:
+    print(f"❌ Erro ao conectar ao broker MQTT: {str(e)}")
 
-# rota destroy, deleta um elemento
-@app.route('/imagens/<int:id>', methods=['DELETE'])
-def delete_equipamento(id):
-    global imagens
-    imagens = [e for e in imagens if e['id'] != id]
-    return jsonify({'message': 'Equipamento removido'})
+# Nova rota para verificar o status da conexão MQTT
+@app.route("/mqtt-status", methods=["GET"])
+def get_mqtt_status():
+    return jsonify({
+        "connected": mqtt_connected,
+        "latest_message": latest_message
+    })
+
+@app.route("/latest-message", methods=["GET"])
+def get_latest_message():
+    return jsonify(latest_message)
+
+# Resto das suas rotas...
+# [O resto do seu código permanece igual]
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
