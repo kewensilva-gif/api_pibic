@@ -29,13 +29,13 @@ def on_message(client, userdata, msg):
     global contador
 
     if msg.topic == "camera/image":
-        extensao = '.jpg'
-        filename = f"{int(datetime.now(timezone.utc).timestamp())}{extensao}"
-        image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        # extensao = '.jpg'
+        # filename = f"{int(datetime.now(timezone.utc).timestamp())}{extensao}"
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], f"image{contador}.jpg")
         with open(image_path, "wb") as img_file:
             img_file.write(msg.payload)
 
-        print(f"Imagem recebida via MQTT (binário) - nº {contador}")
+        # print(f"Imagem recebida via MQTT (binário) - nº {contador}")
         contador = contador+1
         # client.publish('topico_envio', "0")
     # contador+=1
