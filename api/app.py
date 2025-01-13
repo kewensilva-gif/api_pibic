@@ -32,6 +32,7 @@ def on_message(client, userdata, msg):
         client.publish(topic_send, "1")
         # print(f"Imagem recebida via MQTT (binário) - nº {contador}")
         contador = contador+1
+        return
     client.publish(topic_send, "0")
 
 def on_connect(client, userdata, flags, rc):
