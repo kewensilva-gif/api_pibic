@@ -1,68 +1,53 @@
 from flask import Flask, jsonify, request
-from banco import *
-from datetime import datetime, timezone
-from werkzeug.utils import secure_filename
+# from banco import *
+# from datetime import datetime, timezone
+# from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
-conexao = criar_conexao()
+# conexao = criar_conexao()
 
+contador = 0
 
-@app.route("/teste", methods=['GET'])
-def get_teste():
-    return jsonify({"message:": "Conexão feita com sucesso"})
-# rota index, obtem todas as imagens
-@app.route('/imagens', methods=['GET'])
-def get_imagens():
-    imagens = obter_imagens(conexao)
-    return jsonify(imagens)
-
+# Rota de teste
+# @app.route('/teste', methods=['GET'])
+# def get_teste():
+#     mqtt_conf.on_publish(mqtt_conf.client)
+#     return jsonify({"message": "Conexão feita com sucesso"})
 
 # rota store, resposável por inserir as imagens nos arquivos da api e inserir o caminho no banco
 @app.route('/imagens', methods=['POST'])
-def upload_imagem():
-    if request.data:
-        extensao = '.jpg'
-        filename = f"{int(datetime.now(timezone.utc).timestamp())}{extensao}"
-        caminho_imagem = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        
-        with open(caminho_imagem, 'wb') as f:
-            f.write(request.data)
-            
-        if os.path.exists(caminho_imagem) and os.path.getsize(caminho_imagem) > 0:
-            salvar_imagem_no_banco(caminho_imagem, conexao)
-            return jsonify({"message": "Imagem criada com sucesso!"})
-        else:
-            return jsonify({"error": "Não foi possível criar a imagem!"})
+def upload_image():
+    global contador
+    try: 
+        if request.data:
+            image_infos = write_image()
 
+            if image_infos['result']:
+                contador += 1
+
+                return "", 201
+            else:
+                return "", 400
+   
+        return "", 400
+    except Exception as e:
+        print(str(e))
+   
+        return "", 400
     
-    return jsonify({"error": "Sem dados de imagem"}), 400
-""" @app.route('/imagens', methods=['POST'])
-def upload_imagem():
-    imagem = request.files.get('image')
-    if imagem and imagem.filename.endswith(('jpeg', 'png', 'jpg')):
-        extensao = os.path.splitext(imagem.filename)[1]
-        filename = secure_filename(f"{int(datetime.now(timezone.utc).timestamp())}{extensao}")
-        caminho_imagem = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        # caso a pasta não exista ele força a criação
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        imagem.save(caminho_imagem)
+def write_image():
+    caminho_imagem = os.path.join(app.config['UPLOAD_FOLDER'], f"image{contador}.jpg")
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-        salvar_imagem_no_banco(caminho_imagem, conexao)
-        return jsonify({"message": "Imagem criada com sucesso!", "image_path": caminho_imagem})
+    with open(caminho_imagem, 'wb') as f:
+        f.write(request.data)
     
-    return jsonify({"error": "Imagem inválida ou formato não suportado!"}), 400
- """
+    # verifica se a imagem foi realmente adicionada
+    result = os.path.exists(caminho_imagem) and os.path.getsize(caminho_imagem) > 0
 
-# rota destroy, deleta um elemento
-@app.route('/imagens/<int:id>', methods=['DELETE'])
-def delete_equipamento(id):
-    global imagens
-    imagens = [e for e in imagens if e['id'] != id]
-    return jsonify({'message': 'Equipamento removido'})
+    return {"image_path": caminho_imagem, "result": result}
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
