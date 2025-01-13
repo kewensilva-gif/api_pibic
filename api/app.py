@@ -1,71 +1,55 @@
 from flask import Flask, jsonify, request
-from banco import *
-from datetime import datetime, timezone
-from werkzeug.utils import secure_filename
 import os
+import mqtt_conf
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
-# conexao = criar_conexao()
 
 contador = 0
 
-@app.route("/teste", methods=['GET'])
-def get_teste():
-    return jsonify({"message:": "Conexão feita com sucesso"})
-# rota index, obtem todas as imagens
-@app.route('/imagens', methods=['GET'])
-def get_imagens():
-    # imagens = obter_imagens(conexao)
-    return jsonify(imagens)
+# Rota de teste
+# @app.route('/teste', methods=['GET'])
+# def get_teste():
+#     mqtt_conf.on_publish(mqtt_conf.client)
+#     return jsonify({"message": "Conexão feita com sucesso"})
 
-
-# rota store, resposável por inserir as imagens nos arquivos da api e inserir o caminho no banco
+# Rota para fazer upload de imagem
 @app.route('/imagens', methods=['POST'])
-def upload_imagem():
+def upload_image():
     global contador
-    if request.data:
-        # extensao = '.jpg'
-        # filename = f"{int(datetime.now(timezone.utc).timestamp())}{extensao}"
-        caminho_imagem = os.path.join(app.config['UPLOAD_FOLDER'], f"image{contador}.jpg")
-        
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        
-        with open(caminho_imagem, 'wb') as f:
-            f.write(request.data)
-            
-        if os.path.exists(caminho_imagem) and os.path.getsize(caminho_imagem) > 0:
-            # salvar_imagem_no_banco(caminho_imagem, conexao)
-            contador = contador + 1
-            return jsonify({"message": "Imagem criada com sucesso!"})
-        else:
-            return jsonify({"error": "Não foi possível criar a imagem!"})
+    try: 
+        if request.data:
+            image_infos = write_image()
 
+            if image_infos['result']:
+                contador += 1
+
+                if mqtt_conf.mqtt_connected:
+                    mqtt_conf.on_publish(mqtt_conf.client, "1")
+
+                return "", 201
+            else:
+                
+                return "", 400
+        mqtt_conf.on_publish(mqtt_conf.client, "0")
+        return "", 400
+    except Exception as e:
+        print(str(e))
+        mqtt_conf.on_publish(mqtt_conf.client, "0")
+        return "", 400
+
+
+def write_image():
+    caminho_imagem = os.path.join(app.config['UPLOAD_FOLDER'], f"image{contador}.jpg")
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+    with open(caminho_imagem, 'wb') as f:
+        f.write(request.data)
     
-#     return jsonify({"error": "Sem dados de imagem"}), 400
-# @app.route('/imagens', methods=['POST'])
-# def upload_imagem():
-#     imagem = request.files.get('image')
-#     if imagem and imagem.filename.endswith(('jpeg', 'png', 'jpg')):
-#         extensao = os.path.splitext(imagem.filename)[1]
-#         filename = secure_filename(f"{int(datetime.now(timezone.utc).timestamp())}{extensao}")
-#         caminho_imagem = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-#         # caso a pasta não exista ele força a criação
-#         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-#         imagem.save(caminho_imagem)
+    # verifica se a imagem foi realmente adicionada
+    result = os.path.exists(caminho_imagem) and os.path.getsize(caminho_imagem) > 0
 
-#         # salvar_imagem_no_banco(caminho_imagem, conexao)
-#         return 1
-    
-#     return 0
-
-
-# rota destroy, deleta um elemento
-@app.route('/imagens/<int:id>', methods=['DELETE'])
-def delete_equipamento(id):
-    global imagens
-    imagens = [e for e in imagens if e['id'] != id]
-    return jsonify({'message': 'Equipamento removido'})
+    return {"image_path": caminho_imagem, "result": result}
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
