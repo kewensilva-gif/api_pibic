@@ -1,5 +1,5 @@
 import paho.mqtt.client as mqtt
-
+import det_seg as ds
 # Variáveis de configuração mqtt
 broker = 'd7257de2da354fae9738d35f3212c93b.s1.eu.hivemq.cloud'
 port = 8883
@@ -30,7 +30,10 @@ def on_disconnect(client, userdata, rc):
     mqtt_connected = False
     print("Desconectado do broker MQTT")
 
-def on_publish(client, message):
+def on_publish(client, image_infos):
+    caminho_saida = f"segments/{image_infos["image_name"]}"
+
+    message = ds.segObjetos(image_infos["image_path"], caminho_saida + "/", image_infos["image_name"])
     client.publish(topic_send, message)
 
 # Vincula as funções de callback
