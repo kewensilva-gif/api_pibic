@@ -3,6 +3,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
+variacao = 5
 def mostrarImagem(image, titulo):
   if len(image.shape) == 3 and image.shape[2] == 3:  # Imagem colorida
       # Testa um pixel para verificar se está em HSV
@@ -48,6 +49,7 @@ def salvarImagem(caminho, image):
   cv2.imwrite(caminho, img_plot)
 
 def definirMascaraOBJ(pasta_saida, imagem, imagem_hsv, c, n):
+    global variacao
     # Máscara
     selected_color = rgb_to_hsv(c[0], c[1], c[2])
     
@@ -58,8 +60,8 @@ def definirMascaraOBJ(pasta_saida, imagem, imagem_hsv, c, n):
     h_min = max(0, h_value - variacao)
     h_max = min(179, h_value + variacao)
     
-    lower_red = np.array([h_min, 50, 50], dtype=np.uint8)
-    upper_red = np.array([h_max, 255, 255], dtype=np.uint8)
+    lower_red = np.array([h_min, 100, 20], dtype=np.uint8)
+    upper_red = np.array([h_max, 255, 150], dtype=np.uint8) 
 
     # Cria máscaras para a cor
     mask = cv2.inRange(imagem_hsv, lower_red, upper_red)
@@ -83,8 +85,9 @@ def removeRuido(mask,deltaRuido):
   # Filtro Mediano - Remover ruídos da máscara
   return cv2.medianBlur(mask, deltaRuido)
 
-def segObjetos(imagem_caminho, pasta_saida, nomeImagem, variacao=5, deltaRuido=3, tamSeg=200):
+def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200):
     multCoordenadas = ""
+    global variacao
     # Carrega a imagem local
     imagem = carregaImagem(imagem_caminho)
     if imagem is None:
