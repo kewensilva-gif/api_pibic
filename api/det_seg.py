@@ -145,7 +145,7 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
         # Obtém o retângulo delimitador para cada contorno
         x, y, w, h = cv2.boundingRect(contorno)
 
-        multCoordenadas = multCoordenadas + f"{x},{y},{w},{h};"
+        
         # Extrai a região do objeto da imagem original
         objeto = imagem[y:y+h, x:x+w]
 
@@ -157,7 +157,7 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
         if total_pixels > 200:
             # Salva o objeto como um arquivo separado
             salvarImagem(f"{pasta_saida}{nomeImagem}_{i+1}_seg.png",objeto) # Salva como imagem binária (0 e 255)
-
+            multCoordenadas = multCoordenadas + f"{x},{y},{w},{h};"
             #-----------------------------------------------------------------------------------
             # Recorta o segmento binário com base no retângulo delimitador
             segmento_recortado = mask_objeto[y:y+h, x:x+w]
