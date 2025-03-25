@@ -2,7 +2,8 @@
 # API PIBIC
 Essa API é responsável por permitir o envio de imagens para o servidor onde estas serão processadas.
 
-
+## Licença
+Este projeto está licenciado sob a [Licença MIT](LICENSE).
 
 ## Configuração do ambiente com DOCKER
 
