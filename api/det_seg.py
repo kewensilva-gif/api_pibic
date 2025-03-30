@@ -86,7 +86,7 @@ def removeRuido(mask,deltaRuido):
   return cv2.medianBlur(mask, deltaRuido)
 
 def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200):
-    multCoordenadas = ""
+    multCoordenadas = []
     global variacao
     # Carrega a imagem local
     imagem = carregaImagem(imagem_caminho)
@@ -157,7 +157,9 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
         if total_pixels > 200:
             # Salva o objeto como um arquivo separado
             salvarImagem(f"{pasta_saida}{nomeImagem}_{i+1}_seg.png",objeto) # Salva como imagem binária (0 e 255)
-            multCoordenadas = multCoordenadas + f"{x},{y},{w},{h};"
+            # multCoordenadas = multCoordenadas + f"{x},{y},{w},{h};
+
+            multCoordenadas.append({'x': x, 'y': y, 'w': w, 'h': h, 'recorte': cv2.imread(f"{pasta_saida}{nomeImagem}_{i+1}_seg.png")})
             #-----------------------------------------------------------------------------------
             # Recorta o segmento binário com base no retângulo delimitador
             segmento_recortado = mask_objeto[y:y+h, x:x+w]
