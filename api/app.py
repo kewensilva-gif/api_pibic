@@ -3,49 +3,64 @@ import os
 import mqtt_conf
 import numpy as np
 from PIL import Image
-import struct
+import det_seg as ds
+from threading import Thread
+from time import sleep 
+import cv2
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 
 contador = 0
+coordenadas = None
 
-contador = 0
+def convertionAndShowImage(image):
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    imagem_pil = Image.fromarray(image_rgb)
+    imagem_pil.show()
 
-def rgb565_to_rgb888(data, width, height):
-    # Verifica a quantidade de bytes em relação a resolução
-    expected_length = width * height * 2
-    if len(data) != expected_length:
-        raise ValueError(f"Tamanho de dados incompatível. Esperado: {expected_length}, Recebido: {len(data)}")
-    
-    rgb888 = np.zeros((height, width, 3), dtype=np.uint8)
-    
-    # Processa cada pixel
-    for y in range(height):
-        for x in range(width):
-            idx = (y * width + x) * 2
+def processMqttResponse(image_infos):
+    global coordenadas, contador
+    sleep(5)
+    caminho_saida = f"segments/{image_infos["image_name"]}"
+
+    if(coordenadas == None):
+        coordenadas = ds.segObjetos(
+            image_infos["image_path"], 
+            caminho_saida + "/", 
+            image_infos["image_name"]
+        )
+    else:
+        image = cv2.imread(image_infos["image_path"])
+        for coordenada in coordenadas:
+            recorte = image[coordenada["y"]:coordenada["y"]+coordenada["h"], coordenada["x"]:coordenada["x"]+coordenada["w"]]
             
-            # Lê o valor RGB565 (Big Endian)
-            pixel = struct.unpack(">H", data[idx:idx+2])[0]
-            
-            r = ((pixel >> 11) & 0x1F) << 3  # 5 bits para R, expande para 8 bits
-            g = ((pixel >> 5) & 0x3F) << 2   # 6 bits para G, expande para 8 bits
-            b = (pixel & 0x1F) << 3          # 5 bits para B, expande para 8 bits
-            
-            rgb888[y, x, 0] = r
-            rgb888[y, x, 1] = g
-            rgb888[y, x, 2] = b
+            # Converter para HSV
+            recorte_hsv = cv2.cvtColor(recorte, cv2.COLOR_BGR2HSV)
+            recorte_coordenada_hsv = cv2.cvtColor(coordenada["recorte"], cv2.COLOR_BGR2HSV)
 
-    return rgb888
+            # Calcular histogramas do canal H (matiz)
+            recorte_hist = cv2.calcHist([recorte_hsv], [0], None, [256], [0, 256])
+            recorte_coordenada_hist = cv2.calcHist([recorte_coordenada_hsv], [0], None, [256], [0, 256])
 
-def visualizar_rgb565(data, width, height):
-    rgb565_array = np.frombuffer(data, dtype=np.uint16).reshape((height, width))
+            # Normalizar os histogramas para evitar influências de iluminação
+            cv2.normalize(recorte_hist, recorte_hist, 0, 1, cv2.NORM_MINMAX)
+            cv2.normalize(recorte_coordenada_hist, recorte_coordenada_hist, 0, 1, cv2.NORM_MINMAX)
 
-    # Converte para uma imagem PIL de 16 bits
-    img = Image.fromarray(rgb565_array, mode='I;16')  # 'I;16' -> Imagem de 16 bits
+            similaridade = cv2.compareHist(recorte_hist, recorte_coordenada_hist, cv2.HISTCMP_CORREL)
 
-    # Mostra a imagem em tons de cinza
-    img.show()
+            print(f"Similaridade entre os histogramas: {similaridade}")
+
+            if similaridade < 0.5:
+                print("Possível obstrução detectada!")
+                convertionAndShowImage(recorte)
+                sleep(10)
+        
+            else:
+                print("Alvo visível normalmente.")
+
+    if mqtt_conf.mqtt_connected:
+        mqtt_conf.on_publish(mqtt_conf.client, "1")
 
 # Rota para fazer upload de imagem
 @app.route('/imagens', methods=['POST'])
@@ -55,21 +70,13 @@ def upload_image():
     height = int(request.headers['X-Image-Height'])
     try: 
         if request.data:
-            if(request.headers['X-Image-Format'] == "RGB565"):
-                rgb888 = rgb565_to_rgb888(request.data, width, height)
-                img = Image.fromarray(rgb888)
-                img.show()
-                return "", 201
-        
-
             if(request.headers['X-Image-Format'] == "JPEG"):
                 image_infos = write_image(contador)
                 if image_infos['result']:
+                    thread = Thread(target=processMqttResponse(image_infos=image_infos))
+                    thread.start()
+
                     contador += 1
-
-                    if mqtt_conf.mqtt_connected:
-                        mqtt_conf.on_publish(mqtt_conf.client, image_infos)
-
                     return "", 201
                 else:
                     return "", 400
@@ -77,7 +84,6 @@ def upload_image():
     except Exception as e:
         print(str(e))
         return "", 400
-
 
 def write_image(contador):
     name_image = f"image{contador}"
