@@ -1,18 +1,20 @@
 from flask import Flask, jsonify, request
 import os
 import mqtt_conf
-import numpy as np
+# import numpy as np
 from PIL import Image
 import det_seg as ds
 from threading import Thread
 from time import sleep 
 import cv2
+import cnn_cods.target_identification as ti
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 
 contador = 0
 coordenadas = None
+class_response = {"lampada": "2", "colcheias": "3", "floco": "4", "helice": "5", "tv": "6"}
 
 def convertionAndShowImage(image):
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -23,6 +25,7 @@ def processMqttResponse(image_infos):
     global coordenadas, contador
     sleep(5)
     caminho_saida = f"segments/{image_infos["image_name"]}"
+    response_mqtt = "1"
 
     if(coordenadas == None):
         coordenadas = ds.segObjetos(
@@ -30,37 +33,48 @@ def processMqttResponse(image_infos):
             caminho_saida + "/", 
             image_infos["image_name"]
         )
+        ti.test_images_from_coordenadas(coordenadas)
+        print(f"\n\n\nCoordenadas: ", coordenadas)
     else:
         image = cv2.imread(image_infos["image_path"])
         for coordenada in coordenadas:
-            recorte = image[coordenada["y"]:coordenada["y"]+coordenada["h"], coordenada["x"]:coordenada["x"]+coordenada["w"]]
-            
-            # Converter para HSV
-            recorte_hsv = cv2.cvtColor(recorte, cv2.COLOR_BGR2HSV)
-            recorte_coordenada_hsv = cv2.cvtColor(coordenada["recorte"], cv2.COLOR_BGR2HSV)
+            if(coordenada["predicted"] != None):
+                coordenada_recorte = cv2.imread(coordenada["recorte"])
+                recorte = image[coordenada["y"]:coordenada["y"]+coordenada["h"], coordenada["x"]:coordenada["x"]+coordenada["w"]]
+                
+                # Converter para HSV
+                recorte_hsv = cv2.cvtColor(recorte, cv2.COLOR_BGR2HSV)
+                recorte_coordenada_hsv = cv2.cvtColor(coordenada_recorte, cv2.COLOR_BGR2HSV)
 
-            # Calcular histogramas do canal H (matiz)
-            recorte_hist = cv2.calcHist([recorte_hsv], [0], None, [256], [0, 256])
-            recorte_coordenada_hist = cv2.calcHist([recorte_coordenada_hsv], [0], None, [256], [0, 256])
+                # Calcular histogramas do canal H (matiz)
+                recorte_hist = cv2.calcHist([recorte_hsv], [0], None, [256], [0, 256])
+                recorte_coordenada_hist = cv2.calcHist([recorte_coordenada_hsv], [0], None, [256], [0, 256])
 
-            # Normalizar os histogramas para evitar influências de iluminação
-            cv2.normalize(recorte_hist, recorte_hist, 0, 1, cv2.NORM_MINMAX)
-            cv2.normalize(recorte_coordenada_hist, recorte_coordenada_hist, 0, 1, cv2.NORM_MINMAX)
+                # Normalizar os histogramas para evitar influências de iluminação
+                cv2.normalize(recorte_hist, recorte_hist, 0, 1, cv2.NORM_MINMAX)
+                cv2.normalize(recorte_coordenada_hist, recorte_coordenada_hist, 0, 1, cv2.NORM_MINMAX)
 
-            similaridade = cv2.compareHist(recorte_hist, recorte_coordenada_hist, cv2.HISTCMP_CORREL)
+                similaridade = cv2.compareHist(recorte_hist, recorte_coordenada_hist, cv2.HISTCMP_CORREL)
 
-            print(f"Similaridade entre os histogramas: {similaridade}")
+                print(f"Similaridade entre os histogramas: {similaridade}")
 
-            if similaridade < 0.5:
-                print("Possível obstrução detectada!")
-                convertionAndShowImage(recorte)
-                sleep(10)
-        
-            else:
-                print("Alvo visível normalmente.")
+                if similaridade < 0.5:
+                    temp_path = "temp_recorte.jpg"
+                    cv2.imwrite(temp_path, recorte)
+                    
+                    teste = ti.test_image(recorte=temp_path)
+                    if(teste == None or teste != coordenada['predicted']):
+                        print("Possível interação detectada!")
+                        convertionAndShowImage(recorte)
+                        response_mqtt = class_response[coordenada['predicted']]
+                    else:
+                        print("Alvo visível normalmente.")
+                else:
+                    print("Alvo visível normalmente.")
 
     if mqtt_conf.mqtt_connected:
-        mqtt_conf.on_publish(mqtt_conf.client, "1")
+        mqtt_conf.on_publish(mqtt_conf.client, response_mqtt)
+    
 
 # Rota para fazer upload de imagem
 @app.route('/imagens', methods=['POST'])

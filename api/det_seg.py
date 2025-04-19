@@ -3,7 +3,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-variacao = 5
+variacao = 12
 def mostrarImagem(image, titulo):
   if len(image.shape) == 3 and image.shape[2] == 3:  # Imagem colorida
       # Testa um pixel para verificar se está em HSV
@@ -60,7 +60,7 @@ def definirMascaraOBJ(pasta_saida, imagem, imagem_hsv, c, n):
     h_min = max(0, h_value - variacao)
     h_max = min(179, h_value + variacao)
     
-    lower_red = np.array([h_min, 100, 20], dtype=np.uint8)
+    lower_red = np.array([h_min, 70, 20], dtype=np.uint8)
     upper_red = np.array([h_max, 255, 150], dtype=np.uint8) 
 
     # Cria máscaras para a cor
@@ -126,6 +126,10 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
     # Filtro Mediano - Remover ruídos da máscara
     mask_red = removeRuido(mask_red, deltaRuido)
 
+    # Aplicar operação morfológica CLOSE para conectar componentes próximos
+    kernel = np.ones((5,5), np.uint8)
+    mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_CLOSE, kernel)
+
     # Encontra os contornos dos objetos vermelhos
     contornos, _ = cv2.findContours(mask_red, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -152,20 +156,20 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
         # Obtém as dimensões da imagem (altura, largura, canais)
         altura, largura, _ = objeto.shape
         total_pixels = altura * largura  # Número total de pixels
-
+        
         # Condição para considerar somente segmentos com total_pixels > n
-        if total_pixels > 200:
+        if total_pixels > 1000 and altura > 10 and largura > 10:
             # Salva o objeto como um arquivo separado
             salvarImagem(f"{pasta_saida}{nomeImagem}_{i+1}_seg.png",objeto) # Salva como imagem binária (0 e 255)
             # multCoordenadas = multCoordenadas + f"{x},{y},{w},{h};
 
-            multCoordenadas.append({'x': x, 'y': y, 'w': w, 'h': h, 'recorte': cv2.imread(f"{pasta_saida}{nomeImagem}_{i+1}_seg.png")})
+            multCoordenadas.append({'x': x, 'y': y, 'w': w, 'h': h, 'recorte': f"{pasta_saida}{nomeImagem}_{i+1}_seg.png"})
             #-----------------------------------------------------------------------------------
             # Recorta o segmento binário com base no retângulo delimitador
             segmento_recortado = mask_objeto[y:y+h, x:x+w]
             segmento_binario = (segmento_recortado > 0).astype(np.uint8)
         else :
             print(f"Objeto {i+1}: não considerado por tratar-se de um possível ruído (total pixels {total_pixels}px)")
-    print(multCoordenadas)
+
     return multCoordenadas
 
