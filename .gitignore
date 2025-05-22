@@ -1,0 +1,45 @@
+# Bytecode do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Arquivos de ambiente virtual
+venv/
+env/
+.venv/
+.env/
+
+# Arquivos de configuração do sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de log
+*.log
+
+# Arquivos de testes e coverage
+htmlcov/
+.coverage
+.tox/
+.nox/
+.cache/
+.pytest_cache/
+
+# VSCode
+.vscode/
+
+# Arquivos de Jupyter
+.ipynb_checkpoints
+
+# Pasta de build/distribuição
+build/
+dist/
+*.egg-info/
+
+# Configurações pessoais
+*.swp
+*.swo
+
+# Segredos e arquivos sensíveis
+.env
+*.pem
+*.key

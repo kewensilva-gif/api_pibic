@@ -1,12 +1,16 @@
 import paho.mqtt.client as mqtt
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Variáveis de configuração mqtt
-broker = 'd7257de2da354fae9738d35f3212c93b.s1.eu.hivemq.cloud'
-port = 8883
-user = 'mqtt_pibic'
-password = 'Mqtt_pibic2024'
-topic_send = 'api/send/esp'
-topic_image = 'camera/image'
+broker = os.getenv('broker')
+port = int(os.getenv('port'))
+user = os.getenv('user')
+password = os.getenv('password')
+topic_send = os.getenv('topic_send')
+topic_image = os.getenv('topic_image')
 
 mqtt_connected = False
 
