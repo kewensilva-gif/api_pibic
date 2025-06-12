@@ -89,7 +89,7 @@ MYSQL_DATABASE=db_pesquisa
 ### 6. Execute a aplicação
 
 ```bash
-python app.py
+ python .\api\app.py
 ```
 
 > Certifique-se de que o arquivo `app.py` é o ponto de entrada principal da aplicação.
