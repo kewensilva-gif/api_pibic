@@ -95,8 +95,14 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
         return
 
     # Cria a pasta de saída, se não existir
-    if not os.path.exists(pasta_saida):
-        os.makedirs(pasta_saida)
+    if not os.path.exists(f"binary_{pasta_saida}"):
+        os.makedirs(f"binary_{pasta_saida}")
+        
+    if not os.path.exists(f"binary_view_{pasta_saida}"):
+        os.makedirs(f"binary_view_{pasta_saida}")
+
+    if not os.path.exists(f"colored_{pasta_saida}"):
+        os.makedirs(f"colored_{pasta_saida}")
 
     # Converte a imagem para HSV
     imagem_hsv = cv2.cvtColor(imagem, cv2.COLOR_RGB2HSV)
@@ -138,12 +144,12 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
 
         # Cria uma máscara vazia do mesmo tamanho da imagem original
         mask_objeto = np.zeros_like(mask_red)
-
         # Desenha o contorno na máscara
         cv2.drawContours(mask_objeto, [contorno], -1, (255), thickness=cv2.FILLED)
 
         # Normaliza para 0 e 1
         mask_objeto_binario = (mask_objeto > 0).astype(np.uint8)
+        # mostrarImagem(mask_objeto_binario, "mask binario")
 
         #-----------------------------------------------------------------------------------
         # Obtém o retângulo delimitador para cada contorno
@@ -152,22 +158,26 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
         
         # Extrai a região do objeto da imagem original
         objeto = imagem[y:y+h, x:x+w]
+        # mostrarImagem(objeto, "objeto")
 
         # Obtém as dimensões da imagem (altura, largura, canais)
         altura, largura, _ = objeto.shape
         total_pixels = altura * largura  # Número total de pixels
         
         # Condição para considerar somente segmentos com total_pixels > n
-        if total_pixels > 1000 and altura > 10 and largura > 10:
+        if total_pixels > 1000 and altura > 20 and largura > 20:
             # Salva o objeto como um arquivo separado
-            salvarImagem(f"{pasta_saida}{nomeImagem}_{i+1}_seg.png",objeto) # Salva como imagem binária (0 e 255)
-            # multCoordenadas = multCoordenadas + f"{x},{y},{w},{h};
-
-            multCoordenadas.append({'x': x, 'y': y, 'w': w, 'h': h, 'recorte': f"{pasta_saida}{nomeImagem}_{i+1}_seg.png"})
             #-----------------------------------------------------------------------------------
             # Recorta o segmento binário com base no retângulo delimitador
             segmento_recortado = mask_objeto[y:y+h, x:x+w]
+            # mostrarImagem(segmento_recortado, "segmento recortado")
             segmento_binario = (segmento_recortado > 0).astype(np.uint8)
+            # mostrarImagem(segmento_binario, "segmento binario")
+
+            salvarImagem(f"colored_{pasta_saida}{nomeImagem}_{i+1}_seg.png",objeto) # Salva como imagem binária (0 e 255)
+            salvarImagem(f"binary_view_{pasta_saida}{nomeImagem}_{i+1}_seg.png",segmento_recortado) # Salva como imagem binária (0 e 255)
+            salvarImagem(f"binary_{pasta_saida}{nomeImagem}_{i+1}_seg.png",segmento_binario) # Salva como imagem binária (0 e 255)
+            multCoordenadas.append({'x': x, 'y': y, 'w': w, 'h': h, 'recorte': f"binary_{pasta_saida}{nomeImagem}_{i+1}_seg.png"})
         else :
             print(f"Objeto {i+1}: não considerado por tratar-se de um possível ruído (total pixels {total_pixels}px)")
 

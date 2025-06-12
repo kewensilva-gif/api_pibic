@@ -27,50 +27,50 @@ def processMqttResponse(image_infos):
     caminho_saida = f"segments/{image_infos["image_name"]}"
     response_mqtt = "1"
 
-    if(coordenadas == None):
-        coordenadas = ds.segObjetos(
-            image_infos["image_path"], 
-            caminho_saida + "/", 
-            image_infos["image_name"]
-        )
-        ti.test_images_from_coordenadas(coordenadas)
-        print(f"\n\n\nCoordenadas: ", coordenadas)
-    else:
-        image = cv2.imread(image_infos["image_path"])
-        for coordenada in coordenadas:
-            if(coordenada["predicted"] != None):
-                coordenada_recorte = cv2.imread(coordenada["recorte"])
-                recorte = image[coordenada["y"]:coordenada["y"]+coordenada["h"], coordenada["x"]:coordenada["x"]+coordenada["w"]]
+    # if(coordenadas == None):
+    coordenadas = ds.segObjetos(
+        image_infos["image_path"], 
+        caminho_saida + "/", 
+        image_infos["image_name"]
+    )
+        # ti.test_images_from_coordenadas(coordenadas)
+        # print(f"\n\n\nCoordenadas: ", coordenadas)
+    # else:
+    #     image = cv2.imread(image_infos["image_path"])
+    #     for coordenada in coordenadas:
+    #         if(coordenada["predicted"] != None):
+    #             coordenada_recorte = cv2.imread(coordenada["recorte"])
+    #             recorte = image[coordenada["y"]:coordenada["y"]+coordenada["h"], coordenada["x"]:coordenada["x"]+coordenada["w"]]
                 
-                # Converter para HSV
-                recorte_hsv = cv2.cvtColor(recorte, cv2.COLOR_BGR2HSV)
-                recorte_coordenada_hsv = cv2.cvtColor(coordenada_recorte, cv2.COLOR_BGR2HSV)
+    #             # Converter para HSV
+    #             recorte_hsv = cv2.cvtColor(recorte, cv2.COLOR_BGR2HSV)
+    #             recorte_coordenada_hsv = cv2.cvtColor(coordenada_recorte, cv2.COLOR_BGR2HSV)
 
-                # Calcular histogramas do canal H (matiz)
-                recorte_hist = cv2.calcHist([recorte_hsv], [0], None, [256], [0, 256])
-                recorte_coordenada_hist = cv2.calcHist([recorte_coordenada_hsv], [0], None, [256], [0, 256])
+    #             # Calcular histogramas do canal H (matiz)
+    #             recorte_hist = cv2.calcHist([recorte_hsv], [0], None, [256], [0, 256])
+    #             recorte_coordenada_hist = cv2.calcHist([recorte_coordenada_hsv], [0], None, [256], [0, 256])
 
-                # Normalizar os histogramas para evitar influências de iluminação
-                cv2.normalize(recorte_hist, recorte_hist, 0, 1, cv2.NORM_MINMAX)
-                cv2.normalize(recorte_coordenada_hist, recorte_coordenada_hist, 0, 1, cv2.NORM_MINMAX)
+    #             # Normalizar os histogramas para evitar influências de iluminação
+    #             cv2.normalize(recorte_hist, recorte_hist, 0, 1, cv2.NORM_MINMAX)
+    #             cv2.normalize(recorte_coordenada_hist, recorte_coordenada_hist, 0, 1, cv2.NORM_MINMAX)
 
-                similaridade = cv2.compareHist(recorte_hist, recorte_coordenada_hist, cv2.HISTCMP_CORREL)
+    #             similaridade = cv2.compareHist(recorte_hist, recorte_coordenada_hist, cv2.HISTCMP_CORREL)
 
-                print(f"Similaridade entre os histogramas: {similaridade}")
+    #             print(f"Similaridade entre os histogramas: {similaridade}")
 
-                if similaridade < 0.5:
-                    temp_path = "temp_recorte.jpg"
-                    cv2.imwrite(temp_path, recorte)
+    #             if similaridade < 0.5:
+    #                 temp_path = "temp_recorte.jpg"
+    #                 cv2.imwrite(temp_path, recorte)
                     
-                    teste = ti.test_image(recorte=temp_path)
-                    if(teste == None or teste != coordenada['predicted']):
-                        print("Possível interação detectada!")
-                        convertionAndShowImage(recorte)
-                        response_mqtt = class_response[coordenada['predicted']]
-                    else:
-                        print("Alvo visível normalmente.")
-                else:
-                    print("Alvo visível normalmente.")
+    #                 teste = ti.test_image(recorte=temp_path)
+    #                 if(teste == None or teste != coordenada['predicted']):
+    #                     print("Possível interação detectada!")
+    #                     convertionAndShowImage(recorte)
+    #                     response_mqtt = class_response[coordenada['predicted']]
+    #                 else:
+    #                     print("Alvo visível normalmente.")
+    #             else:
+    #                 print("Alvo visível normalmente.")
 
     if mqtt_conf.mqtt_connected:
         mqtt_conf.on_publish(mqtt_conf.client, response_mqtt)
