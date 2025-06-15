@@ -109,17 +109,33 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
 
     # Definição das Máscaras ref. aos Objetos
     # Máscara 1
-    rgb = [196, 125, 137]
+    # rgb = [196, 125, 137]
+    # mask1 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,1)
+    # # Máscara 2
+    # rgb = [198, 131, 127]
+    # mask2 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,2)
+    # # Máscara 3
+    # rgb = [173, 105, 129]
+    # mask3 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,3)
+    # # Máscara 4
+    # rgb = [154, 87, 105]
+    # mask4 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,4)
+
+
+    # Máscara 1
+    rgb = [196, 100, 117]
     mask1 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,1)
     # Máscara 2
-    rgb = [198, 131, 127]
+    rgb = [200, 90, 127]
     mask2 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,2)
     # Máscara 3
-    rgb = [173, 105, 129]
+    rgb = [183, 105, 129]
     mask3 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,3)
     # Máscara 4
-    rgb = [154, 87, 105]
+    rgb = [174, 87, 105]
     mask4 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,4)
+
+
 
     # Combina as máscaras e apresenta
     mask_red = cv2.add(mask1, mask2)
