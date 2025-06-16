@@ -109,20 +109,6 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
 
     # Definição das Máscaras ref. aos Objetos
     # Máscara 1
-    # rgb = [196, 125, 137]
-    # mask1 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,1)
-    # # Máscara 2
-    # rgb = [198, 131, 127]
-    # mask2 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,2)
-    # # Máscara 3
-    # rgb = [173, 105, 129]
-    # mask3 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,3)
-    # # Máscara 4
-    # rgb = [154, 87, 105]
-    # mask4 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,4)
-
-
-    # Máscara 1
     rgb = [196, 100, 117]
     mask1 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,1)
     # Máscara 2
@@ -134,7 +120,6 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
     # Máscara 4
     rgb = [174, 87, 105]
     mask4 = definirMascaraOBJ(pasta_saida,imagem,imagem_hsv,rgb,4)
-
 
 
     # Combina as máscaras e apresenta
@@ -158,16 +143,6 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
     # Segmenta cada objeto vermelho encontrado
     for i, contorno in enumerate(contornos):
 
-        # Cria uma máscara vazia do mesmo tamanho da imagem original
-        mask_objeto = np.zeros_like(mask_red)
-        # Desenha o contorno na máscara
-        cv2.drawContours(mask_objeto, [contorno], -1, (255), thickness=cv2.FILLED)
-
-        # Normaliza para 0 e 1
-        mask_objeto_binario = (mask_objeto > 0).astype(np.uint8)
-        # mostrarImagem(mask_objeto_binario, "mask binario")
-
-        #-----------------------------------------------------------------------------------
         # Obtém o retângulo delimitador para cada contorno
         x, y, w, h = cv2.boundingRect(contorno)
 
@@ -182,17 +157,22 @@ def segObjetos(imagem_caminho, pasta_saida, nomeImagem, deltaRuido=3, tamSeg=200
         
         # Condição para considerar somente segmentos com total_pixels > n
         if total_pixels > 1000 and altura > 20 and largura > 20:
-            # Salva o objeto como um arquivo separado
-            #-----------------------------------------------------------------------------------
-            # Recorta o segmento binário com base no retângulo delimitador
-            segmento_recortado = mask_objeto[y:y+h, x:x+w]
-            # mostrarImagem(segmento_recortado, "segmento recortado")
-            segmento_binario = (segmento_recortado > 0).astype(np.uint8)
-            # mostrarImagem(segmento_binario, "segmento binario")
+            
+            # Usa a máscara detalhada da detecção de cor
+            segmento_mascara = mask_red[y:y+h, x:x+w]
 
-            salvarImagem(f"colored_{pasta_saida}{nomeImagem}_{i+1}_seg.png",objeto) # Salva como imagem binária (0 e 255)
-            salvarImagem(f"binary_view_{pasta_saida}{nomeImagem}_{i+1}_seg.png",segmento_recortado) # Salva como imagem binária (0 e 255)
-            salvarImagem(f"binary_{pasta_saida}{nomeImagem}_{i+1}_seg.png",segmento_binario) # Salva como imagem binária (0 e 255)
+            # Cria a imagem final com transparência
+            objeto_rgba = cv2.cvtColor(objeto, cv2.COLOR_RGB2RGBA)
+            objeto_rgba[:, :, 3] = segmento_mascara
+            # Converte de RGBA para BGRA para que o OpenCV salve as cores corretamente
+            objeto_bgra = cv2.cvtColor(objeto_rgba, cv2.COLOR_RGBA2BGRA)
+
+            segmento_binario = (segmento_mascara > 0).astype(np.uint8)
+            # Salva os 3 tipos de imagem
+            salvarImagem(f"colored_{pasta_saida}{nomeImagem}_{i+1}_seg.png", objeto_bgra)
+            salvarImagem(f"binary_view_{pasta_saida}{nomeImagem}_{i+1}_seg.png", segmento_mascara)
+            salvarImagem(f"binary_{pasta_saida}{nomeImagem}_{i+1}_seg.png", segmento_binario)
+            
             multCoordenadas.append({'x': x, 'y': y, 'w': w, 'h': h, 'recorte': f"binary_{pasta_saida}{nomeImagem}_{i+1}_seg.png"})
         else :
             print(f"Objeto {i+1}: não considerado por tratar-se de um possível ruído (total pixels {total_pixels}px)")
