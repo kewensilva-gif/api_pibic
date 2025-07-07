@@ -36,7 +36,7 @@ def prediction(image):
 
 def test_images_from_coordenadas(coordenadas):
     for coordenada in coordenadas:
-        coordenada["predicted"] = test_image(coordenada['recorte'])
+        coordenada["predicted"] = test_image(coordenada['binary'])
 
 def test_image(recorte):
     image = transform_image(recorte)
