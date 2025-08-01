@@ -9,7 +9,7 @@ from time import sleep
 import cv2
 import mlp_cods.target_identification as ti
 import json
-
+import interacao as interacao
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 
@@ -26,56 +26,9 @@ def convertionAndShowImage(image):
     imagem_pil = Image.fromarray(image_rgb)
     imagem_pil.show()
 
-def aplicar_mascara_em_nova_imagem(imagem_comp, mascara_path, resultado_output_path):
-    mascara = cv2.imread(mascara_path, cv2.IMREAD_GRAYSCALE)
-    if mascara is None:
-        print(f"ERRO: Não foi possível carregar a máscara de '{mascara_path}'.")
-        print("Você executou a Fase 1 para gerar a máscara primeiro?")
-        return False
-
-    # Aplica a máscara para isolar o objeto
-    objeto_isolado = cv2.bitwise_and(imagem_comp, imagem_comp, mask=mascara)
-    
-    resultado_rgba = cv2.cvtColor(objeto_isolado, cv2.COLOR_RGB2RGBA)
-    resultado_rgba[:, :, 3] = mascara
-    cv2.imwrite(resultado_output_path, resultado_rgba)
-    print(f"SUCESSO: Resultado salvo em '{resultado_output_path}'")
-    return True
-
-def analise_histograma(img_base, img_comp, threshold=0.9):
-    if img_base is None or img_comp is None:
-        print(f"ERRO: Não foi possível carregar as imagens.")
-        return
-
-    # Converte para HSV
-    hsv_base = cv2.cvtColor(img_base, cv2.COLOR_BGR2HSV)
-    hsv_comp = cv2.cvtColor(img_comp, cv2.COLOR_BGR2HSV)
-
-    # Máscaras para vermelho em hsv
-    lower_red1 = np.array([0, 70, 70])
-    upper_red1 = np.array([10, 255, 255])
-    lower_red2 = np.array([165, 70, 70])
-    upper_red2 = np.array([179, 255, 255])
-
-    mask_base = cv2.bitwise_or(cv2.inRange(hsv_base, lower_red1, upper_red1), cv2.inRange(hsv_base, lower_red2, upper_red2))
-    mask_comp = cv2.bitwise_or(cv2.inRange(hsv_comp, lower_red1, upper_red1), cv2.inRange(hsv_comp, lower_red2, upper_red2))
-
-    # Calculo e normalização dos histogramas
-    hist_base = cv2.calcHist([hsv_base], [0], mask_base, [180], [0, 180])
-    hist_comp = cv2.calcHist([hsv_comp], [0], mask_comp, [180], [0, 180])
-
-    cv2.normalize(hist_base, hist_base, 0, 1, cv2.NORM_MINMAX)
-    cv2.normalize(hist_comp, hist_comp, 0, 1, cv2.NORM_MINMAX)
-
-    # Comparação de histogramas
-    score = cv2.compareHist(hist_base, hist_comp, cv2.HISTCMP_CORREL)
-    interacao = score < threshold
-    return interacao, score
-    
-
 def processMqttResponse(image_infos):
     global coordenadas, contador
-    sleep(5)
+    # sleep(5)
     caminho_saida = f"segments/{image_infos["image_name"]}"
     response_mqtt = "1"
 
@@ -93,34 +46,49 @@ def processMqttResponse(image_infos):
         cont_inter = 0
         for coordenada in coordenadas:
             if(coordenada["predicted"] != None):
-                alvo_base = cv2.imread(coordenada["target"])
-                alvo_comp_sem_mascara = image[
+                alvo_base = cv2.imread(coordenada["target_rectangle"])
+                alvo_comp = image[
                     coordenada["y"]:coordenada["y"]+coordenada["h"], 
                     coordenada["x"]:coordenada["x"]+coordenada["w"]
                 ]
-                caminho_alvo_comp_masc = f"mascaras_aplicadas/image{contador}-{coordenada["predicted"]}.png"
+                
+                if alvo_base is None or alvo_comp is None:
+                    raise FileNotFoundError(f"Erro ao carregar imagens")
+                
+                hist_base = interacao.extrair_histograma(alvo_base)
+                hist_comp = interacao.extrair_histograma(alvo_comp)
 
-                aplicar_mascara_em_nova_imagem(
-                    imagem_comp=alvo_comp_sem_mascara,
-                    mascara_path=coordenada['mask'], 
-                    resultado_output_path=caminho_alvo_comp_masc
-                )
+                interacao_cosseno, dissim_cosseno = interacao.deteccao_interacao_correl(hist_base, hist_comp)
+                interacao_correl, correlacao = interacao.deteccao_interacao_coss(hist_base, hist_comp)
 
-                alvo_comp = cv2.imread(caminho_alvo_comp_masc)
-                threshold = 0.15
-                interacao, score = analise_histograma(alvo_base, alvo_comp, threshold)
-                if interacao: cont_inter+=1 
+                print(f"Analisando '{coordenada["target_rectangle"]}' vs '{coordenada['predicted']}-image{contador}.png'...")
+                print(f"Score de Correlação Calculado: {correlacao:.4f}")
+                print(f"O score < {interacao.thresholds_correl}? {'Sim' if interacao_correl else 'Não'}")
+                print(f"Score de Dissimilaridade Cosseno Calculado: {dissim_cosseno:.4f}")
+                print(f"O score > {interacao.thresholds_coss}? {'Sim' if interacao_cosseno else 'Não'}")
+                
+                # Salva as possíveis interações detectadas
+                if interacao_cosseno: 
+                    path = "teste-interacao-coss"
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+               
+                    cv2.imwrite(f"{path}/{coordenada['predicted']}-image{contador}.png", alvo_comp)
 
-                print(f"Analisando '{coordenada["target"]}' vs '{caminho_alvo_comp_masc}'...")
-                print(f"Score de Correlação Calculado: {score:.4f}")
-                print(f"O score < {threshold}? {'Sim' if interacao else 'Não'}")
-            
+                if interacao_cosseno:
+                    path = "teste-interacao-correl"
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+               
+                    cv2.imwrite(f"{path}/{coordenada['predicted']}-image{contador}.png", alvo_comp)
+
+                if interacao_cosseno or interacao_correl: 
+                    cont_inter+=1 
+
             print(f"Resultado Final: {'Interação com alvo detectada' if cont_inter == 1  else 'Não houve interação com o alvo'}")
 
         if mqtt_conf.mqtt_connected:
             mqtt_conf.on_publish(mqtt_conf.client, '0')
-        # return        
-
 
     if mqtt_conf.mqtt_connected:
         mqtt_conf.on_publish(mqtt_conf.client, response_mqtt)
