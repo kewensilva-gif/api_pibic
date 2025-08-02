@@ -1,5 +1,3 @@
-Claro! Aqui está o `README.md` atualizado com **instruções detalhadas para rodar o projeto com ambiente virtual do Python**, mantendo também as instruções anteriores sobre Docker:
-
 ---
 
 # API PIBIC
