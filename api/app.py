@@ -75,7 +75,7 @@ def processMqttResponse(image_infos):
                
                     cv2.imwrite(f"{path}/{coordenada['predicted']}-image{contador}.png", alvo_comp)
 
-                if interacao_cosseno:
+                if interacao_correl:
                     path = "teste-interacao-correl"
                     if not os.path.exists(path):
                         os.makedirs(path)
