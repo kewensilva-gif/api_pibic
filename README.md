@@ -56,7 +56,7 @@ python -m venv venv
 * No **Linux/macOS**:
 
   ```bash
-  source venv/bin/activate
+  source venv/Scripts/activate
   ```
 
 * No **Windows**:
